@@ -3,6 +3,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 )
 
@@ -114,5 +115,28 @@ func CompleteTask(id int) {
 }
 
 func DeleteTask(id int) {
-	panic("unimplemented")
+	tasks, err := loadTasks()
+	if err != nil {
+		fmt.Println("Error loading tasks:", err)
+		return
+	}
+	newTasks := []Task{}
+	found := false
+	for _, task := range tasks {
+		if task.ID == id {
+			found = true
+			continue
+		}
+		newTasks = append(newTasks, task)
+	}
+	if !found {
+		fmt.Printf("Task with ID %d not found.\n", id)
+		return
+	}
+	err = saveTasks(newTasks)
+	if err != nil {
+		fmt.Println("Error saving tasks:", err)
+	} else {
+		fmt.Printf("Task %d deleted successfully.\n", id)
+	}
 }
