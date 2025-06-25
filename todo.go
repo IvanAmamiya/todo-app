@@ -1,3 +1,4 @@
+// test comment
 package main
 
 import (
@@ -24,7 +25,11 @@ func loadTasks() ([]Task, error) {
 	defer file.Close()
 
 	var tasks []Task
-	if err := json.NewDecoder(file).Decode(&tasks); err != nil {
+	err = json.NewDecoder(file).Decode(&tasks)
+	if err != nil {
+		if err.Error() == "EOF" {
+			return []Task{}, nil
+		}
 		return nil, err
 	}
 	return tasks, nil
@@ -50,15 +55,62 @@ func nextID(tasks []Task) int {
 }
 
 func AddTask(title string) {
-	panic("unimplemented")
+	tasks, err := loadTasks()
+	if err != nil {
+		println("Error loading tasks:", err.Error())
+		return
+	}
+	task := Task{
+		ID:    nextID(tasks),
+		Title: title,
+		Done:  false,
+	}
+	tasks = append(tasks, task)
+	if err := saveTasks(tasks); err != nil {
+		println("Error saving tasks:", err.Error())
+		return
+	}
+	println("Added task:", title)
 }
 
 func ListTasks() {
-	panic("unimplemented")
+	tasks, err := loadTasks()
+	if err != nil {
+		println("Error loading tasks:", err.Error())
+		return
+	}
+	for _, t := range tasks {
+		status := "[ ]"
+		if t.Done {
+			status = "[x]"
+		}
+		println(t.ID, ":", t.Title, status)
+	}
 }
 
 func CompleteTask(id int) {
-	panic("unimplemented")
+	tasks, err := loadTasks()
+	if err != nil {
+		println("Error loading tasks:", err.Error())
+		return
+	}
+	found := false
+	for i, t := range tasks {
+		if t.ID == id {
+			tasks[i].Done = true
+			found = true
+			break
+		}
+	}
+	if !found {
+		println("Task not found:", id)
+		return
+	}
+	if err := saveTasks(tasks); err != nil {
+		println("Error saving tasks:", err.Error())
+		return
+	}
+	println("Task completed:", id)
 }
 
 func DeleteTask(id int) {
